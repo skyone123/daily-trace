@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Windows
 
 permissions:
   contents: write
@@ -31,8 +31,15 @@ jobs:
       - name: Install npm deps
         run: npm install --no-audit --no-fund
 
-      - name: Build Tauri (release exe)
-        run: npm run tauri build
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        with:
+          tagName: latest
+          releaseName: "Daily Trace (latest build)"
+          prerelease: true
 
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
@@ -40,11 +47,3 @@ jobs:
           name: daily-trace-windows-exe
           path: src-tauri/target/release/daily-trace.exe
           if-no-files-found: error
-
-      - name: Publish to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          name: Daily Trace (latest build)
-          prerelease: true
-          files: src-tauri/target/release/daily-trace.exe

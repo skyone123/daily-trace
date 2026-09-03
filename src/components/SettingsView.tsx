@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { api, type Settings } from "../lib";
 
+const isTauri =
+  typeof window !== "undefined" &&
+  ((window as any).__TAURI_INTERNALS__ || (window as any).__TAURI__);
+
 export default function SettingsView() {
   const [s, setS] = useState<Settings>({});
   const [cats, setCats] = useState<string[]>([]);
@@ -8,6 +12,9 @@ export default function SettingsView() {
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [exportMsg, setExportMsg] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [updateMsg, setUpdateMsg] = useState("");
 
   useEffect(() => {
     api.getSettings().then(setS);
@@ -41,17 +48,56 @@ export default function SettingsView() {
 
   const onExport = async () => {
     setExporting(true);
+    setExportMsg("");
     try {
       const json = await api.exportData();
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `daily-trace-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      if (isTauri) {
+        const { save } = await import("@tauri-apps/plugin-dialog");
+        const { writeTextFile } = await import("@tauri-apps/plugin-fs");
+        const path = await save({
+          defaultPath: `daily-trace-backup-${new Date().toISOString().slice(0, 10)}.json`,
+          filters: [{ name: "JSON", extensions: ["json"] }],
+        });
+        if (path) {
+          await writeTextFile(path, json);
+          setExportMsg("已导出到: " + path);
+        }
+      } else {
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `daily-trace-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setExportMsg("已导出");
+      }
+    } catch (e) {
+      setExportMsg("导出失败: " + String(e));
     } finally {
       setExporting(false);
+    }
+  };
+
+  const checkUpdate = async () => {
+    setUpdating(true);
+    setUpdateMsg("");
+    try {
+      const { check } = await import("@tauri-apps/plugin-updater");
+      const { relaunch } = await import("@tauri-apps/plugin-process");
+      const update = await check();
+      if (update) {
+        setUpdateMsg(`发现新版本 ${update.version}，正在下载安装...`);
+        await update.downloadAndInstall();
+        setUpdateMsg("更新已安装，即将重启...");
+        await relaunch();
+      } else {
+        setUpdateMsg("已是最新版本");
+      }
+    } catch (e) {
+      setUpdateMsg("检查失败: " + String(e));
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -116,7 +162,7 @@ export default function SettingsView() {
           <input
             value={s.excluded_apps ?? ""}
             onChange={(e) => update("excluded_apps", e.target.value)}
-            placeholder="如 1Password, 银行, 微信"
+            placeholder="如 1Password, 銀行, 微信"
             className="input"
           />
         </Field>
@@ -162,7 +208,7 @@ export default function SettingsView() {
         </div>
       </Card>
 
-      <Card title="数据管理" desc="本地优先：一键导出全部数据为 JSON 备份文件">
+      <Card title="数据管理" desc="本地优先：一键导出全部数据为 JSON 备份文件。">
         <button
           onClick={onExport}
           disabled={exporting}
@@ -170,6 +216,22 @@ export default function SettingsView() {
         >
           {exporting ? "导出中…" : "导出数据 (JSON)"}
         </button>
+        {exportMsg && (
+          <p className="text-xs mt-2 text-neutral-600 break-all">{exportMsg}</p>
+        )}
+      </Card>
+
+      <Card title="关于与更新" desc="从 GitHub Release 自动检查并安装更新。">
+        <button
+          onClick={checkUpdate}
+          disabled={updating}
+          className="px-3 py-1.5 text-xs rounded-md border border-neutral-300 hover:border-neutral-400 disabled:opacity-50"
+        >
+          {updating ? "检查中…" : "检查更新"}
+        </button>
+        {updateMsg && (
+          <p className="text-xs mt-2 text-neutral-600 break-all">{updateMsg}</p>
+        )}
       </Card>
 
       <div className="flex items-center gap-3 pt-2">
