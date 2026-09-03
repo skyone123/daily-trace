@@ -1,0 +1,33 @@
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+
+# Rust / Cargo
+src-tauri/target/
+
+# Logs
+*.log
+*.err
+
+# Local SQLite
+*.db
+*.db-journal
+*.db-wal
+
+# OS
+Thumbs.db
+.DESKTOP
+.DS_Store
+
+# Dev screenshots (lockscreen test, not product)
+screenshot-*.png
+
+# IDE
+.vscode/
+.idea/
+
+# Release exe (download from Actions Artifacts, not in repo)
+release-output/

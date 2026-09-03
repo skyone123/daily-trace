@@ -1,0 +1,39 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install npm deps
+        run: npm install --no-audit --no-fund
+
+      - name: Build Tauri (release exe)
+        run: npm run tauri build
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-trace-windows-exe
+          path: src-tauri/target/release/daily-trace.exe
+          if-no-files-found: error
