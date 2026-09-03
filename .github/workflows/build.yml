@@ -1,5 +1,8 @@
 name: Build Windows EXE
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [main, master]
@@ -37,3 +40,11 @@ jobs:
           name: daily-trace-windows-exe
           path: src-tauri/target/release/daily-trace.exe
           if-no-files-found: error
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Daily Trace (latest build)
+          prerelease: true
+          files: src-tauri/target/release/daily-trace.exe
