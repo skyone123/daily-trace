@@ -40,6 +40,7 @@ jobs:
           tagName: latest
           releaseName: "Daily Trace (latest build)"
           prerelease: true
+          updaterJsonPreferNsis: true
 
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
