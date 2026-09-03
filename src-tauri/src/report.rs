@@ -62,6 +62,10 @@ pub async fn generate_report(
     crate::aggregator::aggregate_and_store(store, start, end, gap)
         .map_err(|e| format!("聚合失败: {}", e))?;
 
+    crate::classify::classify_segments(store, provider, start, end)
+        .await
+        .map_err(|e| format!("分类失败: {}", e))?;
+
     let segments = store.list_segments(start, end);
     let segments_text = build_segments_text(&segments);
 

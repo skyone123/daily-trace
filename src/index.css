@@ -27,3 +27,53 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
+
+/* 深色模式：全局覆盖关键色，组件无需逐个加 dark: 前缀 */
+.dark {
+  background: #1c1c1e;
+  color: #f5f5f7;
+}
+.dark body {
+  background: #1c1c1e;
+  color: #f5f5f7;
+}
+.dark .bg-white {
+  background-color: #1c1c1e !important;
+}
+.dark .bg-neutral-50 {
+  background-color: #2c2c2e !important;
+}
+.dark .bg-neutral-100 {
+  background-color: #3a3a3c !important;
+}
+.dark .bg-neutral-50\/50,
+.dark .bg-primary-light\/40 {
+  background-color: rgba(48, 48, 52, 0.6) !important;
+}
+.dark .text-neutral-900,
+.dark .text-neutral-800 {
+  color: #f5f5f7 !important;
+}
+.dark .text-neutral-700 {
+  color: #d1d1d6 !important;
+}
+.dark .text-neutral-600 {
+  color: #aeaeb2 !important;
+}
+.dark .text-neutral-500,
+.dark .text-neutral-400 {
+  color: #8e8e93 !important;
+}
+.dark .border-neutral-200,
+.dark .border-neutral-100 {
+  border-color: #38383a !important;
+}
+.dark .border-black\/5 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .divide-neutral-100 > * {
+  border-color: #38383a !important;
+}
+.dark .placeholder\:text-neutral-400::placeholder {
+  color: #6e6e72 !important;
+}

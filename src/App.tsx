@@ -20,10 +20,12 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("timeline");
   const [paused, setPaused] = useState(false);
   const [loadingPause, setLoadingPause] = useState(true);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     api.getSettings().then((s) => {
       setPaused(s.paused === "true");
+      setDark(s.theme === "dark");
       setLoadingPause(false);
     });
   }, []);
@@ -34,8 +36,14 @@ export default function App() {
     await api.setPaused(next);
   };
 
+  const toggleDark = async () => {
+    const next = !dark;
+    setDark(next);
+    await api.saveSetting("theme", next ? "dark" : "light");
+  };
+
   return (
-    <div className="h-screen flex flex-col bg-neutral-50">
+    <div className={`h-screen flex flex-col bg-neutral-50 ${dark ? "dark" : ""}`}>
       <header className="h-14 bg-white/90 border-b border-black/5 flex items-center px-5 gap-6 shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white text-sm font-bold">
@@ -60,6 +68,13 @@ export default function App() {
           ))}
         </nav>
         <div className="flex-1" />
+        <button
+          onClick={toggleDark}
+          className="px-2.5 py-1.5 text-xs rounded-md border border-neutral-200 hover:border-neutral-400 text-neutral-500"
+          title="切换深色/浅色"
+        >
+          {dark ? "浅色" : "深色"}
+        </button>
         <button
           onClick={togglePause}
           disabled={loadingPause}

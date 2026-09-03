@@ -1,5 +1,6 @@
 pub mod aggregator;
 pub mod capture;
+pub mod classify;
 pub mod commands;
 pub mod llm;
 pub mod report;
@@ -122,11 +123,13 @@ pub fn run() {
             commands::generate_todos,
             commands::update_todo,
             commands::evaluate_todos,
+            commands::classify_segments,
             commands::stats_heatmap,
             commands::stats_focus,
             commands::stats_wordcloud,
             commands::delete_report,
             commands::clear_reports,
+            commands::export_data,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

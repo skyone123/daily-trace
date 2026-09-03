@@ -594,4 +594,48 @@ impl Store {
         )?;
         Ok(())
     }
+
+    pub fn update_segment_category(&self, id: i64, category: &str) -> rusqlite::Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let now = chrono::Utc::now().timestamp_millis();
+        conn.execute(
+            "UPDATE work_segments SET category=?, updated_at=? WHERE id=?",
+            params![category, now, id],
+        )?;
+        Ok(())
+    }
+
+    pub fn list_memories(&self) -> Vec<(String, String, String)> {
+        let conn = match self.conn.lock() {
+            Ok(c) => c,
+            Err(_) => return vec![],
+        };
+        let mut stmt = match conn.prepare("SELECT kind,key,value FROM memories ORDER BY id") {
+            Ok(s) => s,
+            Err(_) => return vec![],
+        };
+        let rows = stmt
+            .query_map([], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, Option<String>>(1)?.unwrap_or_default(),
+                    r.get::<_, Option<String>>(2)?.unwrap_or_default(),
+                ))
+            })
+            .unwrap();
+        rows.filter_map(|r| r.ok()).collect()
+    }
+
+    pub fn export_data(&self) -> serde_json::Value {
+        serde_json::json!({
+            "version": 1,
+            "exported_at": chrono::Utc::now().timestamp_millis(),
+            "settings": self.list_all_settings(),
+            "memories": self.list_memories(),
+            "events": self.list_events(0, i64::MAX, 100000),
+            "segments": self.list_segments(0, i64::MAX),
+            "reports": self.list_reports(100000),
+            "todos": self.list_todos(None, 100000),
+        })
+    }
 }

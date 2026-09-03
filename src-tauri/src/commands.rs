@@ -166,6 +166,21 @@ pub async fn evaluate_todos(state: State<'_, AppState>) -> Result<usize, String>
 }
 
 #[tauri::command]
+pub async fn classify_segments(
+    from: i64,
+    to: i64,
+    state: State<'_, AppState>,
+) -> Result<usize, String> {
+    let provider = report::build_provider_from_settings(&state.store);
+    crate::classify::classify_segments(&state.store, &provider, from, to).await
+}
+
+#[tauri::command]
+pub fn export_data(state: State<AppState>) -> String {
+    serde_json::to_string_pretty(&state.store.export_data()).unwrap_or_default()
+}
+
+#[tauri::command]
 pub fn stats_heatmap(
     from: i64,
     to: i64,

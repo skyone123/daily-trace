@@ -39,6 +39,7 @@ export default function Timeline() {
     try {
       const [from, to] = dayBounds();
       await api.aggregateRange(from, to);
+      await api.classifySegments(from, to);
       await load();
     } finally {
       setLoading(false);

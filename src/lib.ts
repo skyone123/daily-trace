@@ -93,13 +93,22 @@ const DEMO_EVENTS: TimelineEvent[] = [
   { id: 8, ts_start: at(14, 55), ts_end: at(15, 40), kind: "app", app_name: "Chrome", window_title: "Tauri 文档", content_ref: null, raw_meta: null },
 ];
 
+const classifyApp = (app: string): string => {
+  if (app === "VS Code" || app === "Terminal") return "研发编码";
+  if (app === "Chrome") return "学习与调研";
+  if (app === "微信") return "沟通协作";
+  if (app === "Notion") return "文档与汇报";
+  if (app === "Figma") return "产品与设计";
+  return "运维与杂务";
+};
+
 const DEMO_SEGMENTS: WorkSegment[] = DEMO_EVENTS.map((e, i) => ({
   id: i + 1,
   ts_start: e.ts_start,
   ts_end: e.ts_end ?? e.ts_start,
   event_ids: JSON.stringify([e.id]),
   summary: `在 ${e.app_name} 工作 ${Math.round(((e.ts_end ?? e.ts_start) - e.ts_start) / MIN)} 分钟，涉及「${e.window_title}」`,
-  category: e.app_name,
+  category: classifyApp(e.app_name ?? ""),
   tags: null,
   focus_score: null,
   ai_model: null,
@@ -107,27 +116,25 @@ const DEMO_SEGMENTS: WorkSegment[] = DEMO_EVENTS.map((e, i) => ({
 
 const DEMO_REPORT_CONTENT = `## 今日工作日报
 
-### VS Code（82分钟）
+### 研发编码（125分钟）
 - 涉及「main.rs - daily-trace」
 - 涉及「lib.rs - daily-trace」
+- 涉及「cargo build」
 
-### Chrome（78分钟）
+### 学习与调研（78分钟）
 - 涉及「Daily Trace - 官网」
 - 涉及「Tauri 文档」
 
-### 微信（35分钟）
+### 沟通协作（35分钟）
 - 涉及「工作群」
 
-### Notion（40分钟）
+### 文档与汇报（40分钟）
 - 涉及「需求文档 v2」
 
-### Terminal（40分钟）
-- 涉及「cargo build」
-
-### Figma（40分钟）
+### 产品与设计（40分钟）
 - 涉及「首页设计稿」
 
-本日记录工作段 8 条，有效工作时长约 5.3 小时。
+本日记录工作段 8 条，有效工作时长约 5.3 小时。已按工作主题智能分类汇总。
 
 > 当前为离线 Mock 模式生成的日报。在设置中配置云模型 API Key 后，将获得 AI 智能归类与润色。`;
 
@@ -237,6 +244,14 @@ export const api = {
     inv<void>("delete_report", { id }, undefined as unknown as void),
   clearReports: (keep?: number) =>
     inv<number>("clear_reports", { keep }, 0),
+  classifySegments: (from: number, to: number) =>
+    inv<number>("classify_segments", { from, to }, 8),
+  exportData: () =>
+    inv<string>(
+      "export_data",
+      {},
+      JSON.stringify({ version: 1, demo: true, exported_at: Date.now() }, null, 2)
+    ),
 };
 
 export function fmtTime(ts: number): string {

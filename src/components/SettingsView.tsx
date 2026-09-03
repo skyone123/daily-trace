@@ -7,6 +7,7 @@ export default function SettingsView() {
   const [saved, setSaved] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     api.getSettings().then(setS);
@@ -35,6 +36,22 @@ export default function SettingsView() {
       setTestMsg(`✗ ${String(e)}`);
     } finally {
       setTesting(false);
+    }
+  };
+
+  const onExport = async () => {
+    setExporting(true);
+    try {
+      const json = await api.exportData();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `daily-trace-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -143,6 +160,16 @@ export default function SettingsView() {
             </span>
           ))}
         </div>
+      </Card>
+
+      <Card title="数据管理" desc="本地优先：一键导出全部数据为 JSON 备份文件">
+        <button
+          onClick={onExport}
+          disabled={exporting}
+          className="px-3 py-1.5 text-xs rounded-md border border-neutral-300 hover:border-neutral-400 disabled:opacity-50"
+        >
+          {exporting ? "导出中…" : "导出数据 (JSON)"}
+        </button>
       </Card>
 
       <div className="flex items-center gap-3 pt-2">
